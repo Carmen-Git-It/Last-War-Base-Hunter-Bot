@@ -242,5 +242,9 @@ connect()
 # IMPORTANT: Set before starting
 extra_titles = False
 
+last_time = time.time()
+
 while True:
     loop(0 if extra_titles else -200)
+    if time.time() - last_time > 3600:
+        restart_app()
