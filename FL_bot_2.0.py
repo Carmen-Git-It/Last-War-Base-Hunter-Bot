@@ -248,3 +248,4 @@ while True:
     loop(0 if extra_titles else -200)
     if time.time() - last_time > 3600:
         restart_app()
+        last_time = time.time()
