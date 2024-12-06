@@ -43,7 +43,7 @@ DENY = (614, 294)
 # DONT_SHOW_AGAIN = (380, 1050)
 # CONFIRM_DENY = (721, 1215)
 
-CLOSE_ADS = (623, 95)
+CLOSE_ADS = (610, 98)
 
 # Other globals
 
@@ -72,6 +72,10 @@ def connect():
     else:
         deviceSerial = None
         print("Error: No devices connected")
+
+def tap_exact(x,y):
+    os.system(f"adb -s {deviceSerial} shell input tap {x} {y}")
+    time.sleep(2.5)
 
 def tap(x, y):
     x += random() * 10
@@ -116,12 +120,12 @@ def restart_app():
 
 def open_game():
     tap(OPEN_GAME[0], OPEN_GAME[1])
-    time.sleep(30)
+    time.sleep(45)
 
 def close_ads():
-    tap(CLOSE_ADS[0], CLOSE_ADS[1])
-    tap(CLOSE_ADS[0], CLOSE_ADS[1])
-    tap(CLOSE_ADS[0], CLOSE_ADS[1])
+    tap_exact(CLOSE_ADS[0], CLOSE_ADS[1])
+    tap_exact(CLOSE_ADS[0], CLOSE_ADS[1])
+    tap_exact(CLOSE_ADS[0], CLOSE_ADS[1])
 
 def open_title_screen():
     tap(PROFILE[0], PROFILE[1])
@@ -247,5 +251,6 @@ last_time = time.time()
 while True:
     loop(0 if extra_titles else -200)
     if time.time() - last_time > 3600:
+        print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S" + ": " + "Restarting App"))
         restart_app()
         last_time = time.time()
