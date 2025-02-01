@@ -1,12 +1,11 @@
 import os
-import subprocess
 import time
-from datetime import datetime
 from random import random
 
-import PIL.Image
+from  datetime import datetime
+from pytz import timezone
+
 import cv2
-import pytesseract as pt
 import numpy as np
 from PIL import Image
 
@@ -23,6 +22,9 @@ SEC_TITLE = (570, 722)
 DEV_TITLE = (145, 980)
 SCI_TITLE = (355, 980)
 INT_TITLE = (570, 980)
+
+MILITARY_TITLE = (231, 520)
+ADMINISTRATIVE_TITLE = (481, 520)
 
 # FL_TITLE_2 = (145, 722)
 # STRAT_TITLE_2 = (355, 722)
@@ -44,6 +46,8 @@ DENY = (614, 294)
 # CONFIRM_DENY = (721, 1215)
 
 CLOSE_ADS = (610, 98)
+
+BACK_OUT = (46, 1218)
 
 # Other globals
 
@@ -115,6 +119,8 @@ def close_game():
 def restart_app():
     close_game()
     open_game()
+    # CLOSE CAPITOL CONQUEST
+    tap_exact(617, 238)
     close_ads()
     open_title_screen()
 
@@ -178,9 +184,35 @@ def on_instruction_screen():
         return True
     return False
 
-def loop(title_y_offset):
+def loop(title_y_offset, won_svs):
     if on_instruction_screen():
         close_list()
+
+    # SvS Victor Titles
+    if won_svs:
+        tap(MILITARY_TITLE[0], MILITARY_TITLE[1])
+        open_applicant_list()
+        accept_top_applicant()
+        if on_instruction_screen():
+            close_list()
+        else:
+            close_list()
+            close_list()
+
+        if on_instruction_screen():
+            close_list()
+
+        tap(ADMINISTRATIVE_TITLE[0], ADMINISTRATIVE_TITLE[1])
+        open_applicant_list()
+        accept_top_applicant()
+        if on_instruction_screen():
+            close_list()
+        else:
+            close_list()
+            close_list()
+
+        if on_instruction_screen():
+            close_list()
 
     # Secretary of Strategy
     tap(STRAT_TITLE[0], STRAT_TITLE[1] + title_y_offset)
@@ -241,15 +273,31 @@ def loop(title_y_offset):
     close_list()
     close_list()
 
+    tap(BACK_OUT[0], BACK_OUT[1])
+    tap(SERVER[0], SERVER[1])
+
 connect()
 
 # IMPORTANT: Set before starting
-extra_titles = False
+extra_titles = True
+won_svs = True
+apply_after_capitol = False
 
+# Do not touch
+applied = False
 last_time = time.time()
+tz = timezone('EST')
 
 while True:
-    loop(0 if extra_titles else -200)
+    # Check if it's past capitol end
+    if apply_after_capitol and datetime.now(tz).hour >= 13 and not applied:
+        restart_app()
+        time.sleep(5)
+        apply_to_fl()
+        close_list()
+        applied = True
+        print("Applied to FL at " + datetime.now(tz).strftime("%m/%d/%Y, %H:%M:%S"))
+    loop(100 if extra_titles else -200, won_svs)
     if time.time() - last_time > 3600:
         print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S" + ": " + "Restarting App"))
         restart_app()
