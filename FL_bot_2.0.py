@@ -9,6 +9,10 @@ import cv2
 import numpy as np
 from PIL import Image
 
+# This script is meant to work with Nougat-32
+# with a resolution of 1280x720.
+# The emulator will need to have ADB Debugging enabled.
+
 # POSITIONS (for 1280x720)
 OPEN_GAME = (572, 257)
 
@@ -104,6 +108,16 @@ def swipe(x, y, xx, yy, d):
     y += random() * 10
     os.system(f"adb -s {deviceSerial} shell input swipe {x} {y} {xx} {yy} {d}")
     time.sleep(0.5 + random())
+
+def restart_emulator():
+    os.system("taskkill /IM \"HD-Player.exe\" /F")
+    time.sleep(30)
+    os.system("start \"\" \"C:\\Program Files\\BlueStacks_nxt\\HD-Player.exe\" --instance Nougat32")
+    while "HD-Player.exe" not in os.popen('wmic process get description').read():
+        time.sleep(2)
+        print("waiting for HD-Player to restart")
+    time.sleep(45)
+    connect()
 
 # Logic
 
@@ -276,16 +290,29 @@ def loop(title_y_offset, won_svs):
     tap(BACK_OUT[0], BACK_OUT[1])
     tap(SERVER[0], SERVER[1])
 
+extra_titles = True if input("Are there extra SvS titles? (Y/N) Default: (N)") is 'Y' else False
+won_svs = False
+if extra_titles:
+    won_svs = True if input("Did you win SvS? (Y/N) Default: (N)") is 'Y' else False
+
+if "HD-Player.exe" not in os.popen('wmic process get description').read():
+    print("Starting emulator...")
+    restart_emulator()
+    print("Emulator started!")
+    connect()
+    open_game()
+    tap_exact(617, 238)
+    close_ads()
+    open_title_screen()
+
 connect()
 
-# IMPORTANT: Set before starting
-extra_titles = True
-won_svs = True
 apply_after_capitol = False
 
 # Do not touch
 applied = False
 last_time = time.time()
+restart_time = time.time()
 tz = timezone('EST')
 
 while True:
@@ -297,7 +324,22 @@ while True:
         close_list()
         applied = True
         print("Applied to FL at " + datetime.now(tz).strftime("%m/%d/%Y, %H:%M:%S"))
+
+    # Actually tapping stuff
     loop(100 if extra_titles else -200, won_svs)
+
+    # Restart Emulator every 12 hours
+    if time.time() - restart_time > 43200:
+        print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S" + ": " + "Restarting Emulator"))
+        restart_emulator()
+        last_time = time.time()
+        restart_time = time.time()
+        open_game()
+        tap_exact(617, 238)
+        close_ads()
+        open_title_screen()
+
+    # Restart app every hour
     if time.time() - last_time > 3600:
         print(datetime.now().strftime("%m/%d/%Y, %H:%M:%S" + ": " + "Restarting App"))
         restart_app()
